@@ -51,8 +51,8 @@ class MyClient(discord.Client):
                     await message.channel.send(f'Sorry {authorM}, you don\'t have permission to do that!\nTry asking the server admin for permission!')
             elif message.content.startswith('+sauce'):
                 await message.channel.send('Nothing yet. Check back soon...')
-             else:
-                 await message.channel.send(f'Invalid command {authorM}! Try using "+c" for a list of commands')
+            else:
+                await message.channel.send(f'Invalid command {authorM}! Try using "+c" for a list of commands')
                 
 client = MyClient()
 client.run(TOKEN)
