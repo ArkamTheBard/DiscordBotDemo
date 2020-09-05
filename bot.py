@@ -31,19 +31,25 @@ async def jail(ctx, *, membername): #ctx, #member: discord.Member):
             #grab a list of all the users in the guild
             member_list = guild.members
 
-            for member in member_list:
-                print(f'{member.nick} : {member.display_name}')
+            #for member in member_list:
+               # print(f'{member.nick} : {member.display_name}')
 
             #voice channel object that we are moving the user to
             other_voice_channel = guild.get_channel(397552560019341329)
 
             #Grab the member we are moving
             member_obj = ''
+            roleslist = []
+            #obj_list = []
 
             #Search the list of users and assign user to var if found else 
             for member in member_list:
                 if member.nick == membername or member.display_name == membername:
                     member_obj = guild.get_member(member.id)
+                    rolelist = member_obj.roles
+
+                    #for role in rolelist:
+                    #   obj_list.append(discord.Object(role.id))
                     break
                 else:
                     member_obj = None
@@ -51,13 +57,15 @@ async def jail(ctx, *, membername): #ctx, #member: discord.Member):
             if member_obj != None:
                 #voice channel to move user to
                 await member_obj.move_to(other_voice_channel)
+                #await member_obj.remove_roles(guild, member_obj, member_obj.roles[1],reason='Eat my ass')
+                for role in rolelist:
+                    await member_obj.remove_roles(role)
             else:
                 await ctx.send('Failed to find member')
-                    
-            
 
 
     await ctx.send('Finished')
+
 @client.command(aliases=['a'])
 async def anime(ctx,*,anime):
     #Don't ask how this works haha
