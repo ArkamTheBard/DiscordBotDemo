@@ -2,7 +2,7 @@
 import discord, os, requests, json, subprocess
 from discord.ext import commands
 from discord.ext.commands import Bot
-from discord import message
+from discord import channel, message
 
 #Grabbing the environment variable value which is the token
 TOKEN = os.getenv('DISCORD')
@@ -20,8 +20,9 @@ async def greet(ctx):
     await ctx.send('Wait you cheeky bastard!')
 @client.command(aliases=['p'])
 async def ping(ctx,*,ip):
-    output = subprocess.run(f'ping {ip}',capture_output=True)
-    await ctx.send(output.stdout.decode('utf-8'))
+    async with ctx.typing(): #displays the bot as typing while it performs the ping
+        output = subprocess.run(f'ping {ip}',capture_output=True)
+        await ctx.send(output.stdout.decode('utf-8'))
 @client.command(aliases=['j'])
 async def jail(ctx, *, membername):
     for role in ctx.message.author.roles:
