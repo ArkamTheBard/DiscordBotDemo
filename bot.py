@@ -1,5 +1,5 @@
 #Define import statements
-import discord, os, requests, json
+import discord, os, requests, json, subprocess
 from discord.ext import commands
 from discord.ext.commands import Bot
 from discord import message
@@ -19,10 +19,11 @@ async def on_ready():
 async def greet(ctx):
     await ctx.send('Wait you cheeky bastard!')
 @client.command(aliases=['p'])
-async def ping(ctx):
-    await ctx.send('Pong!')
+async def ping(ctx,*,ip):
+    output = subprocess.run(f'ping {ip}',capture_output=True)
+    await ctx.send(output.stdout.decode('utf-8'))
 @client.command(aliases=['j'])
-async def jail(ctx, *, membername): #ctx, #member: discord.Member):
+async def jail(ctx, *, membername):
     for role in ctx.message.author.roles:
         if role.name == 'Mr Bot Maker Man':
             #Grab the guild that we are trying to work with
@@ -31,6 +32,7 @@ async def jail(ctx, *, membername): #ctx, #member: discord.Member):
             #grab a list of all the users in the guild
             member_list = guild.members
 
+            #This will display all of the emem
             #for member in member_list:
                # print(f'{member.nick} : {member.display_name}')
 
@@ -65,7 +67,6 @@ async def jail(ctx, *, membername): #ctx, #member: discord.Member):
 
 
     await ctx.send('Finished')
-
 @client.command(aliases=['a'])
 async def anime(ctx,*,anime):
     #Don't ask how this works haha
@@ -96,5 +97,6 @@ async def anime(ctx,*,anime):
     final_string = final_string + '\nEpisode Count : ' + str(response.json()['data'][0]['attributes']['episodeCount'])
 
     await ctx.send(f'Anime : {anime_original}\n{final_string}')
+
 #Run the bot
 client.run(TOKEN)
