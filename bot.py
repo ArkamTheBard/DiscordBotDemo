@@ -1,8 +1,9 @@
 #Define import statements
-import discord, os, requests, json, subprocess, praw
+import discord, os, os.path, requests, json, subprocess, praw
 from discord.ext import commands
 from discord.ext.commands import Bot
 from discord import message
+from os import path
 
 #Grabbing the environment variable value which is the token
 TOKEN = os.getenv('DISCORD')
@@ -150,6 +151,26 @@ async def reddit_lookup(ctx, *, subreddit):
     for submission in r.subreddit(subreddit).hot(limit=1):
         await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
 
+
+#Psuedo-Reddit homepage
+@client.command(aliases=['rh']) #Reddit Here (rh)
+async def reddit_save(ctx, *, subreddit):
+    guild = client.get_guild(ctx.message.guild.id)
+    guild_str = str(guild)
+    if path.exists(guild_str + '.fuk'):
+        print('file exists')
+        file = (guild_str + '.fuk')
+        with open(file) as f:
+            if subreddit in f.read():
+                print('already in file')
+                r = praw.Reddit(user_agent='Deebot-Sama by /u/0xD3adB33f_',client_id = 'VlrewRi3vJa_-Q',client_secret = '5goc9tnVl5hzyx3f7jDWl09Knls')
+                for submission in r.subreddit(subreddit).hot(limit=1):
+                    await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
+            else:
+                await ctx.send('Stored subreddit, re-run command')
+    else:
+        open(guild_str +'.fuk', 'x')
+        print('created new file')
 # @client.command(aliases=['ascii'])
 # async def ascii_art(ctx,*,text):
 #     text = text.replace(' ','+')
