@@ -20,8 +20,9 @@ async def greet(ctx):
     await ctx.send('Wait you cheeky bastard!')
 @client.command(aliases=['p'])
 async def ping(ctx,*,ip):
-    output = subprocess.run(f'ping {ip}',capture_output=True)
-    await ctx.send(output.stdout.decode('utf-8'))
+    async with ctx.typing():
+        output = subprocess.run(f'ping {ip}',capture_output=True)
+        await ctx.send(output.stdout.decode('utf-8'))
 @client.command(aliases=['j'])
 async def jail(ctx, *, membername):
     for role in ctx.message.author.roles:
