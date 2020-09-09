@@ -152,9 +152,46 @@ async def reddit_lookup(ctx, *, subreddit):
         await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
 
 
-#Psuedo-Reddit homepage
-@client.command(aliases=['rh']) #Reddit Here (rh)
+#add subreddit to storage
+@client.command(aliases=['ar']) #addreddit
 async def reddit_save(ctx, *, subreddit):
+
+    guild = client.get_guild(ctx.message.guild.id)
+    guild_str = str(guild)
+    if path.exists(guild_str + '.fuk'):
+        print('file exists')
+        file = (guild_str + '.fuk')
+        with open(file) as f:
+            if subreddit in f.read():
+                await ctx.send('Already in file!')
+                f.close()
+            else:
+                f.close()
+                f = open(file, 'a')
+                f.write(subreddit + '\n')
+                f.close()
+                await ctx.send('Stored subreddit!')
+
+
+#delete subreddit from storage #TODO
+@client.command(aliases=['delr'])
+async def reddit_del(ctx, *, subreddit):
+
+    guild = client.get_guild(ctx.message.guild.id)
+    guild_str = str(guild)
+    if path.exists(guild_str + '.fuk'):
+        print('file exists')
+        file = (guild_str + '.fuk')
+        with open(file) as f:
+            if subreddit in f.read():
+                f.replace(subreddit, "")
+                await ctx.send("Removed subreddit!")
+            else:
+                await ctx.send("Subreddit not stored")
+
+#Psuedo-Reddit homepage
+@client.command(aliases=['rh']) #Reddit Here (rh) TODO
+async def reddit_here(ctx, *, subreddit):
     guild = client.get_guild(ctx.message.guild.id)
     guild_str = str(guild)
     if path.exists(guild_str + '.fuk'):
