@@ -158,6 +158,7 @@ async def reddit_save(ctx, *, subreddit):
 
     guild = client.get_guild(ctx.message.guild.id)
     guild_str = str(guild)
+    
     if path.exists(guild_str + '.fuk'):
         print('file exists')
         file = (guild_str + '.fuk')
@@ -168,10 +169,29 @@ async def reddit_save(ctx, *, subreddit):
             else:
                 f.close()
                 f = open(file, 'a')
-                f.write(subreddit + '\n')
+                f.write('\n' + subreddit)
                 f.close()
                 await ctx.send('Stored subreddit!')
+    else:
+        print('file does not exist')
+        guild = client.get_guild(ctx.message.guild.id)
+        guild_str = str(guild)
+        file = (guild_str + '.fuk')
+        f = open(file, 'x')
+        f.close()
+        f = open(file, 'a')
+        f.write(subreddit + '\n')
+        f.close()
+        await ctx.send('Stored subreddit!')
+        
 
+
+#list subreddits
+@client.command(aliases=['lr'])
+async def reddit_list(ctx):
+    async with ctx.typing():
+        #TODO
+        await ctx.send('TODO not available atm')
 
 #delete subreddit from storage #TODO
 @client.command(aliases=['delr'])
@@ -179,18 +199,27 @@ async def reddit_del(ctx, *, subreddit):
 
     guild = client.get_guild(ctx.message.guild.id)
     guild_str = str(guild)
+    file = (guild_str + '.fuk')
+
     if path.exists(guild_str + '.fuk'):
         print('file exists')
-        file = (guild_str + '.fuk')
-        with open(file) as f:
-            if subreddit in f.read():
-                f.replace(subreddit, "")
-                await ctx.send("Removed subreddit!")
-            else:
-                await ctx.send("Subreddit not stored")
+        f = open(file, 'r')
+        new_file_content = ''
+        for line in f:
+            stripped_line = line.strip()
+            new_line = stripped_line.replace(subreddit, '')
+            new_file_content += new_line
+        f.close()
+        writing_file = open(file, 'w')
+        writing_file.write(new_file_content)
+        writing_file.close()
+        await ctx.send("Removed subreddit!")
+
+    elif (os.path.isfile(file) == False or os.stat(file).st_size == 0):
+        await ctx.send('You need to add a subreddit before attempting to delete')
 
 #Psuedo-Reddit homepage
-@client.command(aliases=['rh']) #Reddit Here (rh) TODO
+@client.command(aliases=['rh']) #Reddit Here (rh) TODO still have to fix this
 async def reddit_here(ctx, *, subreddit):
     guild = client.get_guild(ctx.message.guild.id)
     guild_str = str(guild)
