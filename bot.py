@@ -161,7 +161,7 @@ async def reddit_lookup(ctx, *, subreddit):
     
     r = praw.Reddit(user_agent='Deebot-Sama by /u/0xD3adB33f_',client_id = 'VlrewRi3vJa_-Q',client_secret = '5goc9tnVl5hzyx3f7jDWl09Knls')
     
-    for submission in r.subreddit(subreddit).hot(limit=1):
+    for submission in r.subreddit(subreddit).hot(limit=5):
         await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
 
 
