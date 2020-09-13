@@ -1,12 +1,25 @@
 #Define import statements
-import discord, os, os.path, requests, json, subprocess, praw
+import discord, os, os.path, requests, json, subprocess, praw, sys
 from discord.ext import commands
 from discord.ext.commands import Bot
 from discord import message
 from os import path
+from sys import platform
+from dotenv import load_dotenv
 
-#Grabbing the environment variable value which is the token
-TOKEN = os.getenv('DISCORD')
+if(platform == 'linux' or platform == 'linux2' or platform == 'darwin'):
+    #check if GNU/Mac environmemt
+    load_dotenv()
+    print(platform)
+    #Grabbing the environment variable value which is the token
+    TOKEN = os.getenv('DISCORD')
+else:
+    #Windows platform
+    print(platform)
+    #Grabbing the environment variable value which is the token
+    TOKEN = os.getenv('DISCORD')
+
+
 #the Bot class inherits from the discord.Client class and as such you can perform the same actions as before
 client = commands.Bot(command_prefix='+')
 
@@ -158,10 +171,9 @@ async def reddit_save(ctx, *, subreddit):
 
     guild = client.get_guild(ctx.message.guild.id)
     guild_str = str(guild)
-    
-    if path.exists(guild_str + '.fuk'):
-        print('file exists')
-        file = (guild_str + '.fuk')
+    file = (guild_str + '.fuk')
+
+    if path.exists(guild_str + '.fuk') and os.stat(file).st_size >= 0:
         with open(file) as f:
             if subreddit in f.read():
                 await ctx.send('Already in file!')
@@ -173,7 +185,6 @@ async def reddit_save(ctx, *, subreddit):
                 f.close()
                 await ctx.send('Stored subreddit!')
     else:
-        print('file does not exist')
         guild = client.get_guild(ctx.message.guild.id)
         guild_str = str(guild)
         file = (guild_str + '.fuk')
@@ -189,11 +200,22 @@ async def reddit_save(ctx, *, subreddit):
 #list subreddits
 @client.command(aliases=['lr'])
 async def reddit_list(ctx):
-    async with ctx.typing():
-        #TODO
-        await ctx.send('TODO not available atm')
+    guild = client.get_guild(ctx.message.guild.id)
+    guild_str = str(guild)
+    file = (guild_str + '.fuk')
 
-#delete subreddit from storage #TODO
+    if path.exists(guild_str + '.fuk') and os.stat(file).st_size > 0:
+        async with ctx.typing():
+            with open(file) as f:
+                lines = (line.rstrip() for line in f) #all lines including the blank ones
+                lines = list(line for line in lines if line) #nonblank lines
+                await ctx.send(f'subreddits stored: `{lines}`')
+                f.close()
+
+    else:
+        await ctx.send('No subreddits stored')
+
+#delete subreddit from storage #TODO - add a check if subreddit is stored
 @client.command(aliases=['delr'])
 async def reddit_del(ctx, *, subreddit):
 
@@ -201,8 +223,7 @@ async def reddit_del(ctx, *, subreddit):
     guild_str = str(guild)
     file = (guild_str + '.fuk')
 
-    if path.exists(guild_str + '.fuk'):
-        print('file exists')
+    if path.exists(guild_str + '.fuk') and os.stat(file).st_size > 0:
         f = open(file, 'r')
         new_file_content = ''
         for line in f:
@@ -219,24 +240,29 @@ async def reddit_del(ctx, *, subreddit):
         await ctx.send('You need to add a subreddit before attempting to delete')
 
 #Psuedo-Reddit homepage
-@client.command(aliases=['rh']) #Reddit Here (rh) TODO still have to fix this
-async def reddit_here(ctx, *, subreddit):
+@client.command(aliases=['rh']) #Reddit Here (rh)
+async def reddit_here(ctx):
     guild = client.get_guild(ctx.message.guild.id)
     guild_str = str(guild)
+
+    r = praw.Reddit(user_agent='Deebot-Sama by /u/0xD3adB33f_',client_id = 'VlrewRi3vJa_-Q',client_secret = '5goc9tnVl5hzyx3f7jDWl09Knls') 
     if path.exists(guild_str + '.fuk'):
-        print('file exists')
         file = (guild_str + '.fuk')
         with open(file) as f:
-            if subreddit in f.read():
-                print('already in file')
-                r = praw.Reddit(user_agent='Deebot-Sama by /u/0xD3adB33f_',client_id = 'VlrewRi3vJa_-Q',client_secret = '5goc9tnVl5hzyx3f7jDWl09Knls')
-                for submission in r.subreddit(subreddit).hot(limit=1):
-                    await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
-            else:
-                await ctx.send('Stored subreddit, re-run command')
+            lines = (line.rstrip() for line in f) #all lines including the blank ones
+            lines = list(line for line in lines if line) #nonblank lines
+            for line in lines:
+                for submission in r.subreddit(line).hot(limit=5):
+                    if submission.stickied: #skip pinned posts
+                        continue
+                    else:
+                        await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
+        f.close()
+
     else:
-        open(guild_str +'.fuk', 'x')
-        print('created new file')
+        await ctx.send('Add subreddit via add_reddit command first')
+
+
 # @client.command(aliases=['ascii'])
 # async def ascii_art(ctx,*,text):
 #     text = text.replace(' ','+')
