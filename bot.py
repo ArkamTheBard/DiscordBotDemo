@@ -287,16 +287,20 @@ async def reddit_del(ctx, *, subreddit):
 
     if path.exists(guild_str + '.fuk') and os.stat(file).st_size > 0:
         f = open(file, 'r')
-        new_file_content = ''
-        for line in f:
-            stripped_line = line.strip()
-            new_line = stripped_line.replace(subreddit, '')
-            new_file_content += new_line
-        f.close()
-        writing_file = open(file, 'w')
-        writing_file.write(new_file_content)
-        writing_file.close()
-        await ctx.send("Removed subreddit!")
+        if subreddit not in f.read():
+            f.close()
+            await ctx.send('Subreddit has to be stored before deleting :b:')
+        else:
+            new_file_content = ''
+            for line in f:
+                stripped_line = line.strip()
+                new_line = stripped_line.replace(subreddit, '')
+                new_file_content += new_line
+            f.close()
+            writing_file = open(file, 'w')
+            writing_file.write(new_file_content)
+            writing_file.close()
+            await ctx.send("Removed subreddit!")
 
     elif (os.path.isfile(file) == False or os.stat(file).st_size == 0):
         await ctx.send('You need to add a subreddit before attempting to delete')
