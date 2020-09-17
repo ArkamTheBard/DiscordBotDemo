@@ -26,17 +26,45 @@ client = commands.Bot(command_prefix='+')
 #Display a message upon successful login
 @client.event
 async def on_ready():
+    #Change the activity of the bot
+    await client.change_presence(activity=discord.Game('...with your emotions'))
     print(f'Logged in as {client.user}')
 
-#Defining bot commands and the aliases used for them
-@client.command(aliases=['g'])
-async def greet(ctx):
-    await ctx.send('Wait you cheeky bastard!')
+#It kind of works but I wnat to be able to
+@client.event
+async def on_member_join(member):
+    #Grab the guild the member joined
+    guild = member.guild
+    #Grab a collection of text channels in the guild the user joined
+    ch = guild.text_channels
+    #Declare an empty variable
+    welcome = ''
+    #loop through the text channels and find the welcome channel
+    for txt_channel in ch:
+        #If welcome channel is found assign the text channel obj to the welcome variable
+        if txt_channel.name == 'welcome' or txt_channel.name == 'Welcome':
+            welcome = guild.get_channel(txt_channel.id)        
+            #Send the greeting
+            await welcome.send(f'''>>> Welcome and well met, {member.mention}. While you're here we ask you observe a few basic rules. No racism, sexism, homophobia, transphobia, etc. of any kind will be tolerated.Please keep the chat free of overly lewd or obscene images or statements. Please be respectful to all members of the Discord. Finally, please listen to mods.\nMake sure to head over to the #role-assign channel next to ensure you're receiving the correct notifications while you're here.\nYou can also head to our #General-ffxiv channel to register your character and make use of Ser Aymeric's FFXIV features. Just type "?iam [World] [Character name]" and remove the brackets. From there, you can check your gear, stats, fflogs, market board pricing/history, gathering node information, and more.\nThanks for joining us and we hope you enjoy your stay!''')
+
+
+    # # rules = guild.rules_channel
+
+    # print(rules)
+    # print(member)
+    # print(member.mention)
+    # print(guild)
+    
+    # await ctx.send(f'Welcome {member.mention}')
+
+#Ping a domain/ip address
 @client.command(aliases=['p'])
 async def ping(ctx,*,ip):
     async with ctx.typing():
         output = subprocess.run(f'ping {ip}',capture_output=True)
         await ctx.send(output.stdout.decode('utf-8'))
+
+#Move the specified user to jail(currently only works on Dress Up Party)
 @client.command(aliases=['j'])
 async def jail(ctx, *, membername):
     for role in ctx.message.author.roles:
@@ -86,6 +114,8 @@ async def jail(ctx, *, membername):
 
 
     await ctx.send('Finished')
+
+#Return information about the specified anime
 @client.command(aliases=['a'])
 async def anime(ctx,*,anime):
     #Don't ask how this works haha
@@ -116,9 +146,12 @@ async def anime(ctx,*,anime):
     final_string = final_string + '\nEpisode Count : ' + str(response.json()['data'][0]['attributes']['episodeCount'])
 
     await ctx.send(f'Anime : {anime_original}\n{final_string}')
+
+#Give a scenario of would you rather?
 # @client.command(aliases=['wyr'])
 # async def would_you_rather(ctx):
     return None
+
 #Dice roll simply pass the type of dice (d6, d12)
 @client.command(aliases=['dr'])
 async def dice_roll(ctx,*,dice):
@@ -142,8 +175,17 @@ async def dice_roll(ctx,*,dice):
     #Store the dice value in a var for use later
     value = response.json()['dice'][0]['value']
 
+    guild = ctx.message.author.guild
+    # ch = guild.text_channels
+    rules = guild.rules_channel
+
+    print(rules)
+    # print(member)
+    # print(member.mention)
+    print(guild)
     #Send the data to the chat server
     await ctx.send(f'{ctx.message.author.mention} rolled **{value}**.')
+
 #Coin flip
 @client.command(aliases=['cf'])
 async def heads_or_tails(ctx):
@@ -155,6 +197,27 @@ async def heads_or_tails(ctx):
     value = response.text.replace('\"','')
     
     await ctx.send(f'{ctx.message.author.mention} flipped **{value}**!')
+
+#werewolf - assign a role (werewolf, human)  | Pretty Big Project
+#So I was able to add a reaction to the message that the bot sends
+#now I need to figure out how to sleep the program for a set amount of time
+#Then once time has passed collect the list of users who reacted and assign the role of either human or wolf
+@client.command(aliases=['werewolf','werewoof','wwoof','woof'])
+async def wwolf(ctx):
+    #Send the initial message declaring a game of Werewolf
+    await ctx.send('Let\'s play Werewolf/Werewoof!\U0001F43A')
+    
+    # #message channel
+    ch = ctx.message.channel
+    #Declare an empty variable
+    message = ''
+    #loop through the list of messages and grab the most recent one
+    async for msg in ch.history(limit=1):
+        message = msg
+    #Add reaction to the last message that was sent(should be the one that the bot sent earlier in this function)
+    await message.add_reaction(':Panic:527715541654306816')
+    await message.add_reaction(':monkaS:537560867063988225')
+
 #Reddit Search
 @client.command(aliases=['reddit','r'])
 async def reddit_lookup(ctx, *, subreddit):
@@ -195,7 +258,6 @@ async def reddit_save(ctx, *, subreddit):
         f.close()
         await ctx.send('Stored subreddit!')
         
-
 
 #list subreddits
 @client.command(aliases=['lr'])
@@ -285,4 +347,3 @@ client.run(TOKEN)
 #roast - @ someone and then create a roast with them
 #alert - when someone is going live on twitch [provide the url of the twitch streamer] //Kind of hard
 #patch notes 
-#werewolf - assign a role (werewolf, human)  | Pretty Big Project
