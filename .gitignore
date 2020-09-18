@@ -1,2 +1,4 @@
 
 *.fuk
+*.swp
+.env
