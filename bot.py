@@ -210,7 +210,6 @@ async def wwolf(ctx):
 
     #sleep the program for 1 minute to allow ppl to make a decision if they will participate in werewolf or not
     await asyncio.sleep(10)
-    print('got here!\n')
 
     async for msg in ch.history(limit=1):
         message = msg
