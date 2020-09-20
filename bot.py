@@ -6,7 +6,9 @@ from discord import message
 from os import path
 from sys import platform
 from dotenv import load_dotenv
+import asyncio
 
+#Test to determine the OS the code is working with.
 if(platform == 'linux' or platform == 'linux2' or platform == 'darwin'):
     #check if GNU/Mac environmemt
     load_dotenv()
@@ -47,16 +49,6 @@ async def on_member_join(member):
             #Send the greeting
             await welcome.send(f'''>>> Welcome and well met, {member.mention}. While you're here we ask you observe a few basic rules. No racism, sexism, homophobia, transphobia, etc. of any kind will be tolerated.Please keep the chat free of overly lewd or obscene images or statements. Please be respectful to all members of the Discord. Finally, please listen to mods.\nMake sure to head over to the #role-assign channel next to ensure you're receiving the correct notifications while you're here.\nYou can also head to our #General-ffxiv channel to register your character and make use of Ser Aymeric's FFXIV features. Just type "?iam [World] [Character name]" and remove the brackets. From there, you can check your gear, stats, fflogs, market board pricing/history, gathering node information, and more.\nThanks for joining us and we hope you enjoy your stay!''')
 
-
-    # # rules = guild.rules_channel
-
-    # print(rules)
-    # print(member)
-    # print(member.mention)
-    # print(guild)
-    
-    # await ctx.send(f'Welcome {member.mention}')
-
 #Ping a domain/ip address
 @client.command(aliases=['p'])
 async def ping(ctx,*,ip):
@@ -67,50 +59,51 @@ async def ping(ctx,*,ip):
 #Move the specified user to jail(currently only works on Dress Up Party)
 @client.command(aliases=['j'])
 async def jail(ctx, *, membername):
-    for role in ctx.message.author.roles:
-        if role.name in ('Mods','Mr Bot Maker Man'):#'Mr Bot Maker Man',
-            #Grab the guild that we are trying to work with
-            guild = client.get_guild(ctx.message.guild.id)
+    with ctx.typing():
+        for role in ctx.message.author.roles:
+            if role.name in ('Mods','Mr Bot Maker Man'):#'Mr Bot Maker Man',
+                #Grab the guild that we are trying to work with
+                guild = client.get_guild(ctx.message.guild.id)
 
-            # voice_channels = guild.voice_channels
+                # voice_channels = guild.voice_channels
 
-            # for ch in voice_channels:
-            #     print(f'{ch.name} | {ch.id}')
-            #grab a list of all the users in the guild
-            member_list = guild.members
+                # for ch in voice_channels:
+                #     print(f'{ch.name} | {ch.id}')
+                #grab a list of all the users in the guild
+                member_list = guild.members
 
-            #This will display all of the emem
-            #for member in member_list:
-               # print(f'{member.nick} : {member.display_name}')
+                #This will display all of the emem
+                #for member in member_list:
+                # print(f'{member.nick} : {member.display_name}')
 
-            #voice channel object that we are moving the user to
-            other_voice_channel = guild.get_channel(651994332848717824)#DressUpParty-651994332848717824#Discree-397552560019341329
+                #voice channel object that we are moving the user to
+                other_voice_channel = guild.get_channel(651994332848717824)#DressUpParty-651994332848717824#Discree-397552560019341329
 
-            #Grab the member we are moving
-            member_obj = ''
-            roleslist = []
-            #obj_list = []
+                #Grab the member we are moving
+                member_obj = ''
+                roleslist = []
+                #obj_list = []
 
-            #Search the list of users and assign user to var if found else 
-            for member in member_list:
-                if member.nick == membername or member.display_name == membername:
-                    member_obj = guild.get_member(member.id)
-                    rolelist = member_obj.roles
+                #Search the list of users and assign user to var if found else 
+                for member in member_list:
+                    if member.nick == membername or member.display_name == membername:
+                        member_obj = guild.get_member(member.id)
+                        rolelist = member_obj.roles
 
-                    #for role in rolelist:
-                    #   obj_list.append(discord.Object(role.id))
-                    break
+                        #for role in rolelist:
+                        #   obj_list.append(discord.Object(role.id))
+                        break
+                    else:
+                        member_obj = None
+
+                if member_obj != None:
+                    #voice channel to move user to
+                    await member_obj.move_to(other_voice_channel)
+                    #await member_obj.remove_roles(guild, member_obj, member_obj.roles[1],reason='Eat my ass')
+                    # for role in rolelist:
+                    #     await member_obj.remove_roles(role)
                 else:
-                    member_obj = None
-
-            if member_obj != None:
-                #voice channel to move user to
-                await member_obj.move_to(other_voice_channel)
-                #await member_obj.remove_roles(guild, member_obj, member_obj.roles[1],reason='Eat my ass')
-                # for role in rolelist:
-                #     await member_obj.remove_roles(role)
-            else:
-                await ctx.send('Failed to find member')
+                    await ctx.send('Failed to find member')
 
 
     await ctx.send('Finished')
@@ -118,34 +111,35 @@ async def jail(ctx, *, membername):
 #Return information about the specified anime
 @client.command(aliases=['a'])
 async def anime(ctx,*,anime):
-    #Don't ask how this works haha
-    headers = {"Accept":"application/vnd.api+json","Content-Type":"text/html"}
-    anime_original = anime
-    #change the spaces to %20 which is how the api denotes spaces in text
-    anime = anime.replace(' ', '%20')
-    #Send get request and return a Response object
-    response = requests.get(f'https://kitsu.io/api/edge/anime?filter[text]={anime}', headers=headers)
+    with ctx.typing():
+        #Don't ask how this works haha
+        headers = {"Accept":"application/vnd.api+json","Content-Type":"text/html"}
+        anime_original = anime
+        #change the spaces to %20 which is how the api denotes spaces in text
+        anime = anime.replace(' ', '%20')
+        #Send get request and return a Response object
+        response = requests.get(f'https://kitsu.io/api/edge/anime?filter[text]={anime}', headers=headers)
 
-    final_string = ''
-    final_string = final_string + 'Titles\n'
-    for line in response.json()['data'][0]['attributes']['titles'].items():
-        final_string = final_string + f'\t{line[0]} : {line[1]}\n'
-    
-    final_string = final_string + '\nSynopsis : '+ response.json()['data'][0]['attributes']['synopsis']
-    
-    final_string = final_string + '\nAverage Rating : ' + response.json()['data'][0]['attributes']['averageRating']
-    
-    final_string = final_string + '\nStart Date : '+ response.json()['data'][0]['attributes']['startDate']
-    if response.json()['data'][0]['attributes']['endDate'] == None:
-        final_string = final_string + '\nEnd Date : ' + 'Ongoing'
-    else:
-        final_string = final_string + '\nEnd Date : ' + response.json()['data'][0]['attributes']['endDate']
-    
-    final_string = final_string + '\nStatus : ' + response.json()['data'][0]['attributes']['status']
-    
-    final_string = final_string + '\nEpisode Count : ' + str(response.json()['data'][0]['attributes']['episodeCount'])
+        final_string = ''
+        final_string = final_string + 'Titles\n'
+        for line in response.json()['data'][0]['attributes']['titles'].items():
+            final_string = final_string + f'\t{line[0]} : {line[1]}\n'
+        
+        final_string = final_string + '\nSynopsis : '+ response.json()['data'][0]['attributes']['synopsis']
+        
+        final_string = final_string + '\nAverage Rating : ' + response.json()['data'][0]['attributes']['averageRating']
+        
+        final_string = final_string + '\nStart Date : '+ response.json()['data'][0]['attributes']['startDate']
+        if response.json()['data'][0]['attributes']['endDate'] == None:
+            final_string = final_string + '\nEnd Date : ' + 'Ongoing'
+        else:
+            final_string = final_string + '\nEnd Date : ' + response.json()['data'][0]['attributes']['endDate']
+        
+        final_string = final_string + '\nStatus : ' + response.json()['data'][0]['attributes']['status']
+        
+        final_string = final_string + '\nEpisode Count : ' + str(response.json()['data'][0]['attributes']['episodeCount'])
 
-    await ctx.send(f'Anime : {anime_original}\n{final_string}')
+        await ctx.send(f'Anime : {anime_original}\n{final_string}')
 
 #Give a scenario of would you rather?
 # @client.command(aliases=['wyr'])
@@ -168,35 +162,29 @@ async def dice_roll(ctx,*,dice):
     # Today at 12:46 AM
     # @House Fortemps Roomba rolled 26. (5 + 1 + 3 = 9,   2 + 8 + 1 + 1 + 5 = 17)
     #url to grab the request from
-    url = f'http://roll.diceapi.com/json/{dice.strip()}'
-    #Store the response in a variable
-    response = requests.get(url)
-   
-    #Store the dice value in a var for use later
-    value = response.json()['dice'][0]['value']
+    with ctx.typing():
+        url = f'http://roll.diceapi.com/json/{dice.strip()}'
+        #Store the response in a variable
+        response = requests.get(url)
+    
+        #Store the dice value in a var for use later
+        value = response.json()['dice'][0]['value']
 
-    guild = ctx.message.author.guild
-    # ch = guild.text_channels
-    rules = guild.rules_channel
-
-    print(rules)
-    # print(member)
-    # print(member.mention)
-    print(guild)
-    #Send the data to the chat server
-    await ctx.send(f'{ctx.message.author.mention} rolled **{value}**.')
+        #Send the data to the chat server
+        await ctx.send(f'{ctx.message.author.mention} rolled **{value}**.')
 
 #Coin flip
 @client.command(aliases=['cf'])
 async def heads_or_tails(ctx):
-   #url to grab the request from
-    url = f'http://flipacoinapi.com/json'
-    #Store the response in a variable
-    response = requests.get(url)
+    with ctx.typing():
+        #url to grab the request from
+        url = f'http://flipacoinapi.com/json'
+        #Store the response in a variable
+        response = requests.get(url)
 
-    value = response.text.replace('\"','')
-    
-    await ctx.send(f'{ctx.message.author.mention} flipped **{value}**!')
+        value = response.text.replace('\"','')
+        
+        await ctx.send(f'{ctx.message.author.mention} flipped **{value}**!')
 
 #werewolf - assign a role (werewolf, human)  | Pretty Big Project
 #So I was able to add a reaction to the message that the bot sends
@@ -204,28 +192,46 @@ async def heads_or_tails(ctx):
 #Then once time has passed collect the list of users who reacted and assign the role of either human or wolf
 @client.command(aliases=['werewolf','werewoof','wwoof','woof'])
 async def wwolf(ctx):
+    async with ctx.typing():
     #Send the initial message declaring a game of Werewolf
-    await ctx.send('Let\'s play Werewolf/Werewoof!\U0001F43A')
+        await ctx.send('Let\'s play Werewolf/Werewoof!\U0001F43A')
     
     # #message channel
-    ch = ctx.message.channel
+    ch = ctx.message.channel    
     #Declare an empty variable
     message = ''
     #loop through the list of messages and grab the most recent one
     async for msg in ch.history(limit=1):
         message = msg
-    #Add reaction to the last message that was sent(should be the one that the bot sent earlier in this function)
+
     await message.add_reaction(':Panic:527715541654306816')
-    await message.add_reaction(':monkaS:537560867063988225')
+    # await message.add_reaction(':monkaS:537560867063988225')
+
+    #sleep the program for 1 minute to allow ppl to make a decision if they will participate in werewolf or not
+    await asyncio.sleep(10)
+
+    for reaction in message.reactions:
+        print('')
+        #If there are at least 5 reactions we can begin the game of werewolf, else the user needs to run the command again
+        if reaction.count >= 2:
+            #d
+            await ctx.send('Got here!')
+            # pass
+        else:
+            await ctx.send('Sorry there weren\'t enough players to start. You need at least 5 players to play!')
+
+
+
+
 
 #Reddit Search
 @client.command(aliases=['reddit','r'])
 async def reddit_lookup(ctx, *, subreddit):
-    
-    r = praw.Reddit(user_agent='Deebot-Sama by /u/0xD3adB33f_',client_id = 'VlrewRi3vJa_-Q',client_secret = '5goc9tnVl5hzyx3f7jDWl09Knls')
-    
-    for submission in r.subreddit(subreddit).hot(limit=5):
-        await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
+    with ctx.typing():
+        r = praw.Reddit(user_agent='Deebot-Sama by /u/0xD3adB33f_',client_id = 'VlrewRi3vJa_-Q',client_secret = '5goc9tnVl5hzyx3f7jDWl09Knls')
+        
+        for submission in r.subreddit(subreddit).hot(limit=5):
+            await ctx.send(f'Title: {submission.title}\nText: {submission.selftext}\nURL: {submission.url}\n***************************************************\n')
 
 
 #add subreddit to storage
