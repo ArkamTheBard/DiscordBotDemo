@@ -339,7 +339,7 @@ async def reddit_here(ctx):
 
 @client.command(aliases=['ascii'])
 async def ascii_art(ctx,*,text):
-    text = text.replace(' ','%20')
+    text = text.replace(' ','+')
     url = 'http://artii.herokuapp.com/make?text='+text
 
     response = requests.get(url)
