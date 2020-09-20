@@ -1,11 +1,12 @@
 #Define import statements
-import discord, os, os.path, requests, json, subprocess, praw, sys
+import discord, os, os.path, requests, json, subprocess, praw, sys, discord.utils
 from discord.ext import commands
 from discord.ext.commands import Bot
 from discord import message
 from os import path
 from sys import platform
 from dotenv import load_dotenv
+from discord.utils import get
 import asyncio
 
 #Test to determine the OS the code is working with.
@@ -209,14 +210,16 @@ async def wwolf(ctx):
 
     #sleep the program for 1 minute to allow ppl to make a decision if they will participate in werewolf or not
     await asyncio.sleep(10)
+    print('got here!\n')
+
+    async for msg in ch.history(limit=1):
+        message = msg
 
     for reaction in message.reactions:
-        print('')
-        #If there are at least 5 reactions we can begin the game of werewolf, else the user needs to run the command again
-        if reaction.count >= 2:
-            #d
+        #If there are at least 6 reactions we can begin the game of werewolf, else the user needs to run the command again
+        if reaction.count >= 6:
             await ctx.send('Got here!')
-            # pass
+        # pass
         else:
             await ctx.send('Sorry there weren\'t enough players to start. You need at least 5 players to play!')
 
