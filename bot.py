@@ -337,17 +337,17 @@ async def reddit_here(ctx):
         await ctx.send('Add subreddit via add_reddit command first')
 
 
-# @client.command(aliases=['ascii'])
-# async def ascii_art(ctx,*,text):
-#     text = text.replace(' ','+')
-#     url = 'http://artii.herokuapp.com/make?text={text}'
+@client.command(aliases=['ascii'])
+async def ascii_art(ctx,*,text):
+    text = text.replace(' ','%20')
+    url = 'http://artii.herokuapp.com/make?text='+text
 
-#     response = requests.get(url)
+    response = requests.get(url)
 
-#     string = ''
-#     for line in response.text.split('\n'):
-#         string = string + line + '\n'
-#Doesn't work currently for some reason the text is displayed all messed up but learned that using three ``` before and after the text puts it into some sort of text box
+    string = ''
+    for line in response.text.split('\n'):
+        string = string + line + '\n'
+    await ctx.send(f'```\n {string} \n```')
 
 #Run the bot
 client.run(TOKEN)
