@@ -347,7 +347,7 @@ async def ascii_art(ctx,*,text):
     string = ''
     for line in response.text.split('\n'):
         string = string + line + '\n'
-    await ctx.send(f'```\n {string} \n```')
+    await ctx.send(f'```\n{string}\n```')
 
 #Run the bot
 client.run(TOKEN)
