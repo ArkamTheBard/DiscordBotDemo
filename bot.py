@@ -1,5 +1,5 @@
 #Define import statements
-import discord, os, os.path, requests, json, subprocess, praw, sys, discord.utils
+import discord, os, os.path, requests, json, subprocess, praw, sys, discord.utils, asyncio, random, youtube_dl
 from discord.ext import commands
 from discord.ext.commands import Bot
 from discord import message
@@ -7,11 +7,11 @@ from os import path
 from sys import platform
 from dotenv import load_dotenv
 from discord.utils import get
-import asyncio
+
 
 #Test to determine the OS the code is working with.
 if(platform == 'linux' or platform == 'linux2' or platform == 'darwin'):
-    #check if GNU/Mac environmemt
+    #check if GNU/Mac environment
     load_dotenv()
     print(platform)
     #Grabbing the environment variable value which is the token
@@ -49,6 +49,107 @@ async def on_member_join(member):
             welcome = guild.get_channel(txt_channel.id)        
             #Send the greeting
             await welcome.send(f'''>>> Welcome and well met, {member.mention}. While you're here we ask you observe a few basic rules. No racism, sexism, homophobia, transphobia, etc. of any kind will be tolerated.Please keep the chat free of overly lewd or obscene images or statements. Please be respectful to all members of the Discord. Finally, please listen to mods.\nMake sure to head over to the #role-assign channel next to ensure you're receiving the correct notifications while you're here.\nYou can also head to our #General-ffxiv channel to register your character and make use of Ser Aymeric's FFXIV features. Just type "?iam [World] [Character name]" and remove the brackets. From there, you can check your gear, stats, fflogs, market board pricing/history, gathering node information, and more.\nThanks for joining us and we hope you enjoy your stay!''')
+
+# @client.command(aliases=['help','h'])
+# async def help_command(ctx):
+#     with ctx.typing():
+#         await ctx.send('something temporary')
+
+#Join the voice channel that the user who ran the command is currently in
+@client.command()
+async def join(ctx):
+    channel = ctx.message.author.voice.channel
+    await channel.connect()
+
+#Leave the voice channel that the user who ran the command is currently in
+@client.command()
+async def leave(ctx):
+    server = ctx.message.guild
+    voice_client = client.voice_clients[0]
+    await voice_client.disconnect()
+
+#Play a song in the voice channel the user is currently in
+@client.command(aliases=['pp','pplay'])
+async def play(ctx,*,url):
+    async with ctx.typing():
+        #Boolean test to see if song file already exists
+        song_there = os.path.isfile('song.mp3')
+        try:        
+            #if song is there delete it
+            if song_there:
+                os.remove('song.mp3')
+                # print('Removed old song file')
+        except PermissionError:
+            #If user tries to play another song before one is done playing throw an error
+            print('Cannot delete song due to song being played')
+            await ctx.send('Error... Music is currently playing')
+
+        # await ctx.send('Playing song')
+
+        voice = client.voice_clients[0]
+
+        ydl_opts = {
+            'format':'bestaudio/best',
+            'quiet':True,
+            'postprocessors':[{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec':'mp3',
+                'preferredquality':'192',
+            }]
+        }
+
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            # print('Downloading audio now\n')
+            #download the file
+            ydl.download([url])
+
+        for file in os.listdir('./'):
+            if file.endswith('.mp3'):
+                name = file
+                # print(f'Renamed File: {file}\n')
+                os.rename(file,'song.mp3')
+
+
+        voice.play(discord.FFmpegPCMAudio('song.mp3'))#, after=lambda e: print(f'{name} has finished playing'))
+        voice.source = discord.PCMVolumeTransformer(voice.source)
+        #Set the volume of the bot
+        voice.source.volume = 0.02
+        
+
+        # nname = name.rsplit('-',2)
+        # await ctx.send(f'Playing: {nname}')
+        # print('Playing\n')
+
+    # server = ctx.message.guild
+    # voice_client = client.voice_clients[0]
+    # player = await.voice_client.create()
+
+#Pause a song that is currently playing in a voice channel
+@client.command(aliases=['pa','pau'])
+async def pause(ctx):
+    voice_client = client.voice_clients[0]
+
+    voice_client.pause()
+
+    await ctx.send('Music Paused')
+
+#Resume a song that is paused
+@client.command(aliases=['re','res'])
+async def resume(ctx):
+    voice_client = client.voice_clients[0]
+
+    voice_client.resume()
+
+    await ctx.send('Music resumed!')
+
+#Stop a song that is currently playing on a server
+@client.command(aliases=['st','sto'])
+async def stop(ctx):
+    voice_client = client.voice_clients[0]
+
+    voice_client.stop()
+
+    await ctx.send('Music stopped!')
 
 #Ping a domain/ip address
 @client.command(aliases=['p'])
@@ -145,7 +246,7 @@ async def anime(ctx,*,anime):
 #Give a scenario of would you rather?
 # @client.command(aliases=['wyr'])
 # async def would_you_rather(ctx):
-    return None
+    # return None
 
 #Dice roll simply pass the type of dice (d6, d12)
 @client.command(aliases=['dr'])
@@ -191,11 +292,37 @@ async def heads_or_tails(ctx):
 #So I was able to add a reaction to the message that the bot sends
 #now I need to figure out how to sleep the program for a set amount of time
 #Then once time has passed collect the list of users who reacted and assign the role of either human or wolf
+@client.command(aliases=['wwhelp','whelp','wh'])
+async def werewolf_help(ctx):
+    rulebook = 'https://pegasusshop.de/media/pdf/d8/9a/93/4250231704208_gb.pdf'
+    rulebook2 = 'https://www.playwerewolf.co/rules'
+    youtube = 'https://www.youtube.com/watch?v=GaBZgOuuH5o&ab_channel=CleverMove'
+    await ctx.send(f'Alright so here are the rules for Werewolf \U0001F913\U0001F913\U0001F913:\nRulebook \U0001F4DA: {rulebook}\nEasy Explanation \U0001F3EB: {rulebook2}\nYoutube Video Explanation\U0001F4FA: {youtube}')
 @client.command(aliases=['werewolf','werewoof','wwoof','woof'])
-async def wwolf(ctx):
+async def wwolf(ctx,*,wait_time=1):
+    #Setup : 1 Seer, 1 Doctor, and 2 werewolves and the rest of the players should be villagers. If you have 16 or more players you can replace a villager for 1 additional werewolf
+   
+    roles = {
+        'Apprentice Seer' : 'Become the Seer if the Seer is killed.',
+        'Aura Seer' : 'At night, find the team of one player. (variation: At night, find out if someone has a no-ordinary role and what it is)',
+        'Beholder' : 'Opens his eyes the first night to see who the seer is',
+        'Big Bad Wolf' : 'If the werewolves target is beside you, you can kill any combination of your adjacent players. However, if the leprechaun redirects the initial attack, none of your adjacent players die. (variation: you can attack one person beside the intial werewolf target.',
+        'Bogeyman' : 'If the wolves can\'t decide who to kil, you\'ll do it for them. You win if all the night-active players are dead.',
+        'Body Guard' : 'Choose a different player each night to protet. That player cannot be killed that night.',
+        'Cupid' : 'Choose two players to be lovers. If one of those players dies, the other dies from a broken heart.',
+        'The Count' : 'The first night, you are told how many werewolves there are in each half of the village.',
+        'Diseased' : 'If you are attacked by werewolves, the werewolves do not get fed the following night.',
+        'Fruit Brute': 'If you are the last wolf left alive, you lose your appetite and cannot feed, but you are trying to root out all the villagers',
+        'Ghost': 'Die the first night, then each day, write one letter clues as a message from the beyond (no names or initials).',
+        'Hunter':'If you are killed, take someone down with you.',
+        'Village Idiot':'Always vote for players to die',
+        'Insomniac':'Each knight, learn at least one of your neightbors has woken up during the night.',
+        'Lycan':'You are a villager, but you appear falsely to be a werewolf to the Seers and PI.',
+        'Wolf man' : 'The exact opposite of a lycan.'
+    }
     async with ctx.typing():
     #Send the initial message declaring a game of Werewolf
-        await ctx.send('Let\'s play Werewolf/Werewoof!\U0001F43A')
+        await ctx.send('Let\'s play Werewolf/Werewoof! \U0001F43A')
     
     # #message channel
     ch = ctx.message.channel    
@@ -204,26 +331,40 @@ async def wwolf(ctx):
     #loop through the list of messages and grab the most recent one
     async for msg in ch.history(limit=1):
         message = msg
+    #store the message id in a var for usage later
+    message_id = message.id
 
     await message.add_reaction(':Panic:527715541654306816')
     # await message.add_reaction(':monkaS:537560867063988225')
 
     #sleep the program for 1 minute to allow ppl to make a decision if they will participate in werewolf or not
-    await asyncio.sleep(10)
+    await asyncio.sleep(int(wait_time) * 60)
+    #should remove the bot's reaction
+    await message.remove_reaction(':Panic:527715541654306816',client.user)
+    #refresh and grab the updated message
+    message = await ch.fetch_message(message_id)
 
-    async for msg in ch.history(limit=1):
-        message = msg
-
+    roles = ['Werewolf','Werewolf','Seer','Doctor','Villager']
+    #Loop through the collection object and get the count of a type of reaction
     for reaction in message.reactions:
         #If there are at least 6 reactions we can begin the game of werewolf, else the user needs to run the command again
-        if reaction.count >= 6:
-            await ctx.send('Got here!')
-        # pass
+        if reaction.count >= 1:
+            await ctx.send(f'Starting soon...')
+            #flatten the async iterator into a list of users
+            users = await reaction.users().flatten()
+            
+            #1 werewolf if ppl 6 - 8, 2 werewolf if ppl 9 - 11, 3 for 12 - 15
+            #loop through the user list and print out who reacted
+            for user in users:
+                print(f'{user.name} reacted!')
+                role = random.choice(roles)
+                roles.remove(role)
+                await user.send(f'{user.mention} you are a {role}!')
+                
+                
+
         else:
-            await ctx.send('Sorry there weren\'t enough players to start. You need at least 5 players to play!')
-
-
-
+            await ctx.send('Sorry there weren\'t enough players to start.\U0001F631\U0001F631\U0001F631\n You need at least 5 players to play! \U0001F64C\U0001F64C\U0001F64C')
 
 
 #Reddit Search
@@ -339,6 +480,7 @@ async def reddit_here(ctx):
 
 @client.command(aliases=['ascii'])
 async def ascii_art(ctx,*,text):
+    # text = text.replace(' ','%20')
     text = text.replace(' ','+')
     url = 'http://artii.herokuapp.com/make?text='+text
 
@@ -348,14 +490,12 @@ async def ascii_art(ctx,*,text):
     for line in response.text.split('\n'):
         string = string + line + '\n'
     await ctx.send(f'```\n{string}\n```')
-
+    
 #Run the bot
 client.run(TOKEN)
 
 #topic changing - 
 #would you rather 
-#music //Pretty big project
-
 #roast - @ someone and then create a roast with them
 #alert - when someone is going live on twitch [provide the url of the twitch streamer] //Kind of hard
-#patch notes 
+#patch notes
