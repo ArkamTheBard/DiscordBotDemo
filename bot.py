@@ -72,6 +72,7 @@ async def leave(ctx):
 @client.command(aliases=['pp','pplay'])
 async def play(ctx,*,url):
     async with ctx.typing():
+        await join(ctx)
         #Boolean test to see if song file already exists
         song_there = os.path.isfile('song.mp3')
         try:        
