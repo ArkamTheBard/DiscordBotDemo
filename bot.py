@@ -307,6 +307,9 @@ async def jail(ctx, *, membername):
                     #     await member_obj.remove_roles(role)
                 else:
                     await ctx.send('Failed to find member')
+            
+            else:
+                await ctx.send('You do not have permissions to use this command!')
 
 
     await ctx.send('Finished')
@@ -527,7 +530,7 @@ async def reddit_list(ctx):
     else:
         await ctx.send('No subreddits stored')
 
-#delete subreddit from storage #TODO - add a check if subreddit is stored
+#delete subreddit from storage
 @client.command(aliases=['delr'])
 async def reddit_del(ctx, *, subreddit):
 
@@ -578,10 +581,26 @@ async def reddit_here(ctx):
     else:
         await ctx.send('Add subreddit via add_reddit command first')
 
+#Moves previous message (mods only)
+@client.command(aliases=['mm', 'movemessage'])
+async def off_topic_move(ctx):
+    #TODO
+    guild = client.get_guild(ctx.message.guild.id)
+    
+    for role in ctx.message.author.roles:
+        if role.name in ('Mods', 'Mr. Bot Maker Man'):
+            #TODO
+            await ctx.send('Not implemented #TODO')
+    else:
+        await ctx.send('You do not have permissions to run this command!')
+
+
+    #await ctx.send('Command not yet implemented. Check back later.')
+
+
 
 @client.command(aliases=['ascii'])
 async def ascii_art(ctx,*,text):
-    # text = text.replace(' ','%20')
     text = text.replace(' ','+')
     url = 'http://artii.herokuapp.com/make?text='+text
 
